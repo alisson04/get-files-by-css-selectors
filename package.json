@@ -1,0 +1,24 @@
+{
+  "name": "donwload-by-css-selectors",
+  "version": "1.1.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alisson04/download-by-css-selectors.git"
+  },
+  "author": "alisson04",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alisson04/download-by-css-selectors/issues"
+  },
+  "homepage": "https://github.com/alisson04/download-by-css-selectors#readme",
+  "dependencies": {
+    "axios": "^1.3.1",
+    "puppeteer": "^19.6.3"
+  }
+}
