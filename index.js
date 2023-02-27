@@ -22,10 +22,13 @@ class DownloadByCssSelector {
         const metaAttributes = await this.page
             .$$eval(cssSelector, (el, linkAttr) => el.map(x => x.getAttribute(linkAttr)), linkAttr);
 
+        const folderPath = await this.getFolderNameByLink(site);
+        await this.createFolder(folderPath);
+
         for (let link of metaAttributes) {
             let fileName = await this.getFileNameByLink(link);
 
-            const file = fs.createWriteStream('' + fileName);
+            const file = fs.createWriteStream(folderPath + '/' + fileName);
 
             await axios({ method: 'get', url: link, responseType: 'stream' }).then(response => {
                 return new Promise((resolve, reject) => {
@@ -50,6 +53,10 @@ class DownloadByCssSelector {
         console.log('Done');
     }
 
+    async getFolderNameByLink(link) {
+        return './downloads/' + link.replace(/[^\w\s]/gi, '_');
+    }
+
     async getFileNameByLink(link) {
         let arrayType = link.split(".");
         let fileType = arrayType[arrayType.length - 1];
@@ -59,6 +66,15 @@ class DownloadByCssSelector {
 
         return fileName.replace(/[^a-z0-9]/gi,'') + '.' + fileType;
     }
+
+    async createFolder(folderPath) {
+        if (fs.existsSync(folderPath)){
+            return;
+        }
+
+        console.log('Creating folder: ' + folderPath);
+        fs.mkdirSync(folderPath, { recursive: true });
+    }
 }
 
-export default  DownloadByCssSelector;
+export default DownloadByCssSelector;
