@@ -20,8 +20,7 @@ class DownloadByCssSelector {
     console.log('Create page');
     this.page = await browser.newPage();
 
-    console.log('Goto ' + site)
-    ;
+    console.log('Goto ' + site);
     await this.page.goto(site, {waitUntil: 'networkidle0'});
 
     console.log('SetViewport');
