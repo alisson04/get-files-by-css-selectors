@@ -26,17 +26,18 @@ class DownloadByCssSelector {
     console.log('SetViewport');
     await this.page.setViewport({width: 1920, height: 1080});
 
+    console.log('getFolderNameByLink');
+    const folderPath = await this.getFolderNameByLink(site);
+    await this.createFolder(folderPath);
+
     console.log('Screenshot');
-    await this.page.screenshot({path: 'buddy-screenshot.png'});
+    await this.page.screenshot({path: folderPath + '/screenshot_1.png'});
 
     const metaAttributes = await this.page.$$eval(
         cssSelector,
         (el, linkAttr) => el.map((x) => x.getAttribute(linkAttr)),
         linkAttr,
     );
-
-    const folderPath = await this.getFolderNameByLink(site);
-    await this.createFolder(folderPath);
 
     for (const link of metaAttributes) {
       const fileName = await this.getFileNameByLink(link);
