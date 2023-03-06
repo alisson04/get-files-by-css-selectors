@@ -3,9 +3,9 @@ import axios from 'axios';
 import fs from 'fs';
 
 /**
- * Represents a DownloadByCssSelector
+ * Represents a GetFilesByCssSelectors
  */
-class DownloadByCssSelector {
+class GetFilesByCssSelectors {
   /**
    * @param {string} site
    * @param {string} cssSelector
@@ -30,8 +30,13 @@ class DownloadByCssSelector {
     const folderPath = await this.getFolderNameByLink(site);
     await this.createFolder(folderPath);
 
-    console.log('Screenshot');
+    console.log('Screenshot1');
     await this.page.screenshot({path: folderPath + '/screenshot_1.png'});
+
+    await this.autoScroll();
+
+    console.log('Screenshot2');
+    await this.page.screenshot({path: folderPath + '/screenshot_2.png'});
 
     const metaAttributes = await this.page.$$eval(
         cssSelector,
@@ -40,32 +45,54 @@ class DownloadByCssSelector {
     );
 
     for (const link of metaAttributes) {
-      const fileName = await this.getFileNameByLink(link);
+      if (link) {
+        const fileName = await this.getFileNameByLink(link);
 
-      const file = fs.createWriteStream(folderPath + '/' + fileName);
+        const file = fs.createWriteStream(folderPath + '/' + fileName);
 
-      await axios({method: 'get', url: link, responseType: 'stream'})
-          .then((response) => {
-            return new Promise((resolve, reject) => {
-              response.data.pipe(file);
-              let error = null;
-              file.on('error', (err) => {
-                error = err;
-                file.close();
-                reject(err);
-              });
+        await axios({method: 'get', url: link, responseType: 'stream'})
+            .then((response) => {
+              return new Promise((resolve, reject) => {
+                response.data.pipe(file);
+                let error = null;
+                file.on('error', (err) => {
+                  error = err;
+                  file.close();
+                  reject(err);
+                });
 
-              file.on('close', () => {
-                if (!error) {
-                  resolve(true);
-                }
+                file.on('close', () => {
+                  if (!error) {
+                    resolve(true);
+                  }
+                });
               });
             });
-          });
+      }
     }
 
     await browser.close();
     console.log('Done');
+  }
+
+  async autoScroll() {
+    await console.log('AutoScrolling...');
+    await this.page.evaluate(async () => {
+      await new Promise((resolve) => {
+        let totalHeight = 0;
+        const distance = 100;
+        const timer = setInterval(() => {
+          var scrollHeight = document.body.scrollHeight;
+          window.scrollBy(0, scrollHeight);
+          totalHeight += distance;
+
+          if(totalHeight >= scrollHeight - window.innerHeight){
+            clearInterval(timer);
+            resolve();
+          }
+        }, 100);
+      });
+    });
   }
 
   /**
@@ -81,6 +108,10 @@ class DownloadByCssSelector {
    * @return {string}
    */
   async getFileNameByLink(link) {
+    console.log(link)
+    const arrayQueryString = link.split('?');
+    link = arrayQueryString[0];
+
     const arrayType = link.split('.');
     const fileType = arrayType[arrayType.length - 1];
 
@@ -103,4 +134,4 @@ class DownloadByCssSelector {
   }
 }
 
-export default DownloadByCssSelector;
+export default GetFilesByCssSelectors;

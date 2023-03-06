@@ -1,4 +1,5 @@
 import DownloadByCssSelector from '../index.js';
+
 const downloadByCssSelector = new DownloadByCssSelector;
 
 test('is getting a correct download file path by link', () => {
