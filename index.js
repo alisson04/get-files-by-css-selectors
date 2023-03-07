@@ -6,36 +6,43 @@ import fs from 'fs';
  * Represents a GetFilesByCssSelectors
  */
 class GetFilesByCssSelectors {
+  constructor() {
+    this.logs = [];
+  }
   /**
    * @param {string} site
    * @param {string} cssSelector
    * @param {string} linkAttr
    */
   async run(site, cssSelector, linkAttr) {
-    console.log('Create Browser');
+    if (!site || !cssSelector || !linkAttr) {
+      throw new Error('You must provide a site, a cssSelector and a linkAttr');
+    }
+
+    await this.setLog('Create Browser');
     const browser = await puppeteer.launch(
         {ignoreDefaultArgs: ['--disable-extensions'], args: ['--no-sandbox']},
     );
 
-    console.log('Create page');
+    await this.setLog('Create page');
     this.page = await browser.newPage();
 
-    console.log('Goto ' + site);
+    await this.setLog('Goto ' + site);
     await this.page.goto(site, {waitUntil: 'networkidle0'});
 
-    console.log('SetViewport');
+    await this.setLog('SetViewport');
     await this.page.setViewport({width: 1920, height: 1080});
 
-    console.log('getFolderNameByLink');
+    await this.setLog('getFolderNameByLink');
     const folderPath = await this.getFolderNameByLink(site);
     await this.createFolder(folderPath);
 
-    console.log('Screenshot1');
+    await this.setLog('Screenshot1');
     await this.page.screenshot({path: folderPath + '/screenshot_1.png'});
 
-    await this.autoScroll();
+    await this.infinityScroll();
 
-    console.log('Screenshot2');
+    await this.setLog('Screenshot2');
     await this.page.screenshot({path: folderPath + '/screenshot_2.png'});
 
     const metaAttributes = await this.page.$$eval(
@@ -72,11 +79,11 @@ class GetFilesByCssSelectors {
     }
 
     await browser.close();
-    console.log('Done');
+    await this.setLog('Done');
   }
 
-  async autoScroll() {
-    await console.log('AutoScrolling...');
+  async infinityScroll() {
+    await this.setLog('AutoScrolling');
     await this.page.evaluate(async () => {
       await new Promise((resolve) => {
         let totalHeight = 0;
@@ -96,6 +103,20 @@ class GetFilesByCssSelectors {
   }
 
   /**
+   * @param {string} message
+   */
+  async setLog(message) {
+    this.logs.push(message);
+  }
+
+  /**
+   * @return {Array}
+   */
+  getLogs() {
+    return this.logs;
+  }
+
+  /**
    * @param {string} link
    * @return {string}
    */
@@ -108,7 +129,6 @@ class GetFilesByCssSelectors {
    * @return {string}
    */
   async getFileNameByLink(link) {
-    console.log(link)
     const arrayQueryString = link.split('?');
     link = arrayQueryString[0];
 
@@ -129,7 +149,7 @@ class GetFilesByCssSelectors {
       return;
     }
 
-    console.log('Creating folder: ' + folderPath);
+    await this.setLog('Creating folder: ' + folderPath);
     fs.mkdirSync(folderPath, {recursive: true});
   }
 }

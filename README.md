@@ -24,19 +24,28 @@
     </tr>
 </table>
 
-## Build
-* RUN npm i @dev-alisson-fernandes/get-files-by-css-selectors
+## Getting Started
+Install @dev-alisson-fernandes/get-files-by-css-selectors as a npm module
+```shell
+npm i @dev-alisson-fernandes/get-files-by-css-selectors
+```
 
 ## Usage Example
 ```javascript
+// import
 import GetFilesByCssSelectors from '@dev-alisson-fernandes/get-files-by-css-selectors';
 const getFilesByCssSelectors = new GetFilesByCssSelectors;
 
+// define params
 let randomSite = 'https://www.bikewale.com/honda-bikes/activa-6g/images/';
 let cssSelectors = 'img[class~="gallery-swiper-image"]';
 let attrName = 'data-original';
 
+// run
 await getFilesByCssSelectors.run(randomSite, cssSelectors, attrName);
+
+// show logs
+getFilesByCssSelectors.getLogs();
 ```
 
 ## Dev
