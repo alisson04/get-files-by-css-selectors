@@ -158,7 +158,7 @@ class GetFilesByCssSelectors {
    * @return {string}
    */
   async getFileNameByLink(link) {
-    return md5(link.replace(/[^\w\s]/gi, ''));
+    return md5(link);
   }
 
   /**

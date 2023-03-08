@@ -1,6 +1,6 @@
 {
   "name": "@dev-alisson-fernandes/get-files-by-css-selectors",
-  "version": "1.3.0",
+  "version": "1.5.1",
   "description": "Download files from url using css selectors to find the source of the files",
   "main": "index.js",
   "type": "module",

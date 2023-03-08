@@ -22,8 +22,8 @@ describe('Tests of getFilesByCssSelectors', () => {
   });
 
   it.each([
-    [ 'https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png', '12ce88ad72f27f7d93e731dc0b38c249' ],
-    [ 'https://pbs.twimg.com/profile_banners/14594760/1676488748/600x200', 'b7cf0778126c080c095504ceb4876801' ],
+    [ 'https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png', '49051a2b08761814117b58c38593a0c3' ],
+    [ 'https://pbs.twimg.com/profile_banners/14594760/1676488748/600x200', '5edff99de030b2d2d7c373ec643dd18b' ],
   ])('is getting a correct file name by link', (link, expected) => {
     const getFilesByCssSelectors = new GetFilesByCssSelectors;
 
