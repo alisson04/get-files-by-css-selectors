@@ -12,19 +12,20 @@ describe('Tests of getFilesByCssSelectors', () => {
   });
 
   it.each([
-    [ 'https://www.google.com', './downloads/https___www_google_com' ],
-    [ 'https://twitter.com', './downloads/https___twitter_com' ],
-    [ 'https://instagram.com', './downloads/https___instagram_com' ],
+    [ 'https://www.google.com', 'httpswwwgooglecom' ],
+    [ 'https://twitter.com', 'httpstwittercom' ],
+    [ 'https://instagram.com', 'httpsinstagramcom' ],
   ])('is getting a correct download file path by link', (link, expected) => {
     const getFilesByCssSelectors = new GetFilesByCssSelectors;
 
     return getFilesByCssSelectors.getFolderNameByLink(link).then((data) => { expect(data).toBe(expected) });
   });
 
-  it('is getting a correct file name by link', () => {
+  it.each([
+    [ 'https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png', '12ce88ad72f27f7d93e731dc0b38c249' ],
+    [ 'https://pbs.twimg.com/profile_banners/14594760/1676488748/600x200', 'b7cf0778126c080c095504ceb4876801' ],
+  ])('is getting a correct file name by link', (link, expected) => {
     const getFilesByCssSelectors = new GetFilesByCssSelectors;
-    const link = 'https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png';
-    const expected = 'googlelogocolor272x92dppng.png';
 
     return getFilesByCssSelectors.getFileNameByLink(link).then((data) => { expect(data).toBe(expected) });
   });

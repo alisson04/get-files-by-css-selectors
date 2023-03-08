@@ -1,6 +1,8 @@
 import puppeteer from 'puppeteer';
 import axios from 'axios';
 import fs from 'fs';
+import mime from 'mime-types';
+import md5 from 'md5';
 
 /**
  * Represents a GetFilesByCssSelectors
@@ -8,7 +10,9 @@ import fs from 'fs';
 class GetFilesByCssSelectors {
   constructor() {
     this.logs = [];
+    this.config = { infiniteScroll: true, showLogs: true }
   }
+
   /**
    * @param {string} site
    * @param {string} cssSelector
@@ -34,13 +38,13 @@ class GetFilesByCssSelectors {
     await this.page.setViewport({width: 1920, height: 1080});
 
     await this.setLog('getFolderNameByLink');
-    const folderPath = await this.getFolderNameByLink(site);
+    const folderPath = './downloads/' + await this.getFolderNameByLink(site);
     await this.createFolder(folderPath);
 
     await this.setLog('Screenshot1');
     await this.page.screenshot({path: folderPath + '/screenshot_1.png'});
 
-    await this.infinityScroll();
+    await this.infiniteScroll();
 
     await this.setLog('Screenshot2');
     await this.page.screenshot({path: folderPath + '/screenshot_2.png'});
@@ -51,38 +55,52 @@ class GetFilesByCssSelectors {
         linkAttr,
     );
 
-    for (const link of metaAttributes) {
-      if (link) {
-        const fileName = await this.getFileNameByLink(link);
-
-        const file = fs.createWriteStream(folderPath + '/' + fileName);
-
-        await axios({method: 'get', url: link, responseType: 'stream'})
-            .then((response) => {
-              return new Promise((resolve, reject) => {
-                response.data.pipe(file);
-                let error = null;
-                file.on('error', (err) => {
-                  error = err;
-                  file.close();
-                  reject(err);
-                });
-
-                file.on('close', () => {
-                  if (!error) {
-                    resolve(true);
-                  }
-                });
-              });
-            });
-      }
-    }
+    await this.setLog('Found ' + metaAttributes.length + ' links to download');
+    await this.downloadFiles(folderPath, metaAttributes);
 
     await browser.close();
     await this.setLog('Done');
   }
 
-  async infinityScroll() {
+  /**
+   * @param {String} folderPath
+   * @param {Array} links
+   */
+  async downloadFiles(folderPath, links) {
+    for (const link of links) {
+      if (link) {
+        let fileName = await this.getFileNameByLink(link);
+
+        await axios({method: 'get', url: link, responseType: 'stream'})
+          .then((response) => {
+            let fileExtension = mime.extension(response.headers['content-type']);
+            const file = fs.createWriteStream(folderPath + '/' + fileName + '.' + fileExtension);
+
+            return new Promise((resolve, reject) => {
+              response.data.pipe(file);
+              let error = null;
+              file.on('error', (err) => {
+                error = err;
+                file.close();
+                reject(err);
+              });
+
+              file.on('close', () => {
+                if (!error) {
+                  resolve(true);
+                }
+              });
+            });
+          });
+      }
+    }
+  }
+
+  async infiniteScroll() {
+    if (!this.config.infiniteScroll) {
+      return;
+    }
+
     await this.setLog('AutoScrolling');
     await this.page.evaluate(async () => {
       await new Promise((resolve) => {
@@ -103,10 +121,21 @@ class GetFilesByCssSelectors {
   }
 
   /**
+   * @param {Object} config
+   */
+  setConfig(config) {
+    this.config = { ...this.config, ...config};
+  }
+
+  /**
    * @param {string} message
    */
   async setLog(message) {
     this.logs.push(message);
+
+    if (this.config.showLogs) {
+      console.log(message);
+    }
   }
 
   /**
@@ -121,7 +150,7 @@ class GetFilesByCssSelectors {
    * @return {string}
    */
   async getFolderNameByLink(link) {
-    return './downloads/' + link.replace(/[^\w\s]/gi, '_');
+    return link.replace(/[^\w\s]/gi, '');
   }
 
   /**
@@ -129,16 +158,7 @@ class GetFilesByCssSelectors {
    * @return {string}
    */
   async getFileNameByLink(link) {
-    const arrayQueryString = link.split('?');
-    link = arrayQueryString[0];
-
-    const arrayType = link.split('.');
-    const fileType = arrayType[arrayType.length - 1];
-
-    const arrayName = link.split('/');
-    const fileName = arrayName[arrayName.length - 1];
-
-    return fileName.replace(/[^a-z0-9]/gi, '') + '.' + fileType;
+    return md5(link.replace(/[^\w\s]/gi, ''));
   }
 
   /**
@@ -150,7 +170,7 @@ class GetFilesByCssSelectors {
     }
 
     await this.setLog('Creating folder: ' + folderPath);
-    fs.mkdirSync(folderPath, {recursive: true});
+    fs.mkdirSync(folderPath, { recursive: true });
   }
 }
 

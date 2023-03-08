@@ -1,14 +1,18 @@
 # Get Files By Css Selectors
 
+## About
+This package is recommended for situations where you want to download the files of a site by it doesn't
+have an option like a download button or an easy way to do it
+
 ## Features
-* Access a web page and take a print screen
-* Create a specific folder using the given site link
-* Download images using a given css selector
+* ✅ Access a web page and take a print screen
+* ✅ Create a specific folder using the given site link
+* ✅ Download any type of file(with or without extension on url) using a given css selector
 
 ## Features in development
-* Download images without extension like (.png, .jpg)
-* Add replace option to get the original image using the thumb image
-* Download files other types of files
+* ⚙️ Add replace option to get the original image using the thumb image
+* ⚙️ Add login option with .ENV to sites that require authentication
+* ⚙️ Verify if file already exists and don't save download again(in cases when the downloads break by some reason)
 
 ## Tecnologies Used
 <table>
@@ -30,22 +34,48 @@ Install @dev-alisson-fernandes/get-files-by-css-selectors as a npm module
 npm i @dev-alisson-fernandes/get-files-by-css-selectors
 ```
 
-## Usage Example
+## Usage
 ```javascript
 // import
 import GetFilesByCssSelectors from '@dev-alisson-fernandes/get-files-by-css-selectors';
 const getFilesByCssSelectors = new GetFilesByCssSelectors;
+```
 
+### Example 1 - Twitter
+```javascript
 // define params
-let randomSite = 'https://www.bikewale.com/honda-bikes/activa-6g/images/';
-let cssSelectors = 'img[class~="gallery-swiper-image"]';
-let attrName = 'data-original';
+let randomSite = 'https://twitter.com/UOLEconomia';
+let cssSelectors = 'img[class~="css-9pa8cd"]';
+let attrName = 'src';
 
 // run
 await getFilesByCssSelectors.run(randomSite, cssSelectors, attrName);
+```
+### Example 2 - Instagram
+```javascript
+// define params
+let randomSite = 'https://www.instagram.com/uoloficial/';
+let cssSelectors = 'img[class="x5yr21d xu96u03 x10l6tqk x13vifvy x87ps6o xh8yej3"]';
+let attrName = 'src';
 
-// show logs
+// run
+await getFilesByCssSelectors.run(randomSite, cssSelectors, attrName);
+```
+
+### Logs
+```javascript
+// show array logs in the end
 getFilesByCssSelectors.getLogs();
+
+// Disable showing logs durant run process
+getFilesByCssSelectors.setConfig({ infiniteScroll: false });
+```
+
+### InfiniteScroll
+By default, all pages will be scrolled to the end before search elements, but you can disable this behavior 
+with the code below 
+```javascript
+getFilesByCssSelectors.setConfig({ infiniteScroll: false });
 ```
 
 ## Dev
