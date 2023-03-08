@@ -14,6 +14,13 @@
     "type": "git",
     "url": "git+https://github.com/alisson04/get-files-by-css-selectors.git"
   },
+  "keywords": [
+    "download",
+    "get",
+    "files",
+    "images",
+    "movies"
+  ],
   "author": "dev-alisson-fernandes",
   "license": "ISC",
   "bugs": {
