@@ -10,6 +10,8 @@ import md5 from 'md5';
 class GetFilesByCssSelectors {
   constructor() {
     this.logs = [];
+    this.page = null;
+    this.browser = null;
     this.config = { infiniteScroll: true, showLogs: true }
   }
 
@@ -23,50 +25,63 @@ class GetFilesByCssSelectors {
       throw new Error('You must provide a site, a cssSelector and a linkAttr');
     }
 
+    await this.createBrowserAndPage(site);
+
+    await this.setLog('getFolderNameByLink');
+    const folderPath = './downloads/' + await this.getFolderNameByLink(site);
+    await this.createFolder(folderPath);
+
+    await this.takeScreenshot(folderPath + '/screenshot_1.png');
+
+    await this.infiniteScroll();
+
+    await this.takeScreenshot(folderPath + '/screenshot_2.png');
+
+    const metaAttributes = await this.getLinksToDownload(cssSelector, linkAttr);
+
+    await this.setLog('Found ' + metaAttributes.length + ' links to download');
+    await this.downloadFilesWithValidExtension(folderPath, metaAttributes);
+
+    await this.browser.close();
+    await this.setLog('Done');
+  }
+
+  async getLinksToDownload(cssSelector, linkAttr) {
+     return await this.page.$$eval(cssSelector, (el, linkAttr) => el.map((x) => x.getAttribute(linkAttr)), linkAttr);
+  }
+
+  /**
+   * @param {String} path
+   */
+  async takeScreenshot(path) {
+    await this.setLog('takeScreenshot');
+    await this.page.screenshot({path: path });
+  }
+
+  /**
+   * @param {String} site
+   */
+  async createBrowserAndPage(site) {
     await this.setLog('Create Browser');
-    const browser = await puppeteer.launch(
+    this.browser = await puppeteer.launch(
         {ignoreDefaultArgs: ['--disable-extensions'], args: ['--no-sandbox']},
     );
 
     await this.setLog('Create page');
-    this.page = await browser.newPage();
+    this.page = await this.browser.newPage();
 
     await this.setLog('Goto ' + site);
     await this.page.goto(site, {waitUntil: 'networkidle0'});
 
     await this.setLog('SetViewport');
     await this.page.setViewport({width: 1920, height: 1080});
-
-    await this.setLog('getFolderNameByLink');
-    const folderPath = './downloads/' + await this.getFolderNameByLink(site);
-    await this.createFolder(folderPath);
-
-    await this.setLog('Screenshot1');
-    await this.page.screenshot({path: folderPath + '/screenshot_1.png'});
-
-    await this.infiniteScroll();
-
-    await this.setLog('Screenshot2');
-    await this.page.screenshot({path: folderPath + '/screenshot_2.png'});
-
-    const metaAttributes = await this.page.$$eval(
-        cssSelector,
-        (el, linkAttr) => el.map((x) => x.getAttribute(linkAttr)),
-        linkAttr,
-    );
-
-    await this.setLog('Found ' + metaAttributes.length + ' links to download');
-    await this.downloadFiles(folderPath, metaAttributes);
-
-    await browser.close();
-    await this.setLog('Done');
   }
 
   /**
    * @param {String} folderPath
    * @param {Array} links
    */
-  async downloadFiles(folderPath, links) {
+  async downloadFilesWithValidExtension(folderPath, links) {
     for (const link of links) {
       if (link) {
         let fileName = await this.getFileNameByLink(link);
@@ -74,23 +89,26 @@ class GetFilesByCssSelectors {
         await axios({method: 'get', url: link, responseType: 'stream'})
           .then((response) => {
             let fileExtension = mime.extension(response.headers['content-type']);
-            const file = fs.createWriteStream(folderPath + '/' + fileName + '.' + fileExtension);
 
-            return new Promise((resolve, reject) => {
-              response.data.pipe(file);
-              let error = null;
-              file.on('error', (err) => {
-                error = err;
-                file.close();
-                reject(err);
-              });
+            if (fileExtension) {
+              const file = fs.createWriteStream(folderPath + '/' + fileName + '.' + fileExtension);
 
-              file.on('close', () => {
-                if (!error) {
-                  resolve(true);
-                }
+              return new Promise((resolve, reject) => {
+                response.data.pipe(file);
+                let error = null;
+                file.on('error', (err) => {
+                  error = err;
+                  file.close();
+                  reject(err);
+                });
+
+                file.on('close', () => {
+                  if (!error) {
+                    resolve(true);
+                  }
+                });
               });
-            });
+            }
           });
       }
     }
