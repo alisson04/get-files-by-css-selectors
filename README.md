@@ -61,6 +61,16 @@ let attrName = 'src';
 // run
 await getFilesByCssSelectors.run(randomSite, cssSelectors, attrName);
 ```
+### Example 3 - Google Images
+```javascript
+// define params
+let randomSite = 'https://www.google.com/search?q=imagem&source=lnms&tbm=isch';
+let cssSelectors = 'img[class="rg_i Q4LuWd"]';
+let attrName = 'src';
+
+// run
+await getFilesByCssSelectors.run(randomSite, cssSelectors, attrName);
+```
 
 ### Logs
 ```javascript
