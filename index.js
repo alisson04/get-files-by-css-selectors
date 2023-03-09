@@ -27,7 +27,6 @@ class GetFilesByCssSelectors {
 
     await this.createBrowserAndPage(site);
 
-    await this.setLog('getFolderNameByLink');
     const folderPath = './downloads/' + await this.getFolderNameByLink(site);
     await this.createFolder(folderPath);
 
@@ -39,15 +38,20 @@ class GetFilesByCssSelectors {
 
     const metaAttributes = await this.getLinksToDownload(cssSelector, linkAttr);
 
-    await this.setLog('Found ' + metaAttributes.length + ' links to download');
     await this.downloadFilesWithValidExtension(folderPath, metaAttributes);
 
+    await this.finish();
+  }
+
+  async finish() {
     await this.browser.close();
-    await this.setLog('Done');
+    await this.setLog('Finished');
   }
 
   async getLinksToDownload(cssSelector, linkAttr) {
-     return await this.page.$$eval(cssSelector, (el, linkAttr) => el.map((x) => x.getAttribute(linkAttr)), linkAttr);
+    const metaAttributes = await this.page.$$eval(cssSelector, (el, linkAttr) => el.map((x) => x.getAttribute(linkAttr)), linkAttr);
+    await this.setLog('Found ' + metaAttributes.length + ' links to download');
+    return metaAttributes;
   }
 
   /**
@@ -168,6 +172,7 @@ class GetFilesByCssSelectors {
    * @return {string}
    */
   async getFolderNameByLink(link) {
+    await this.setLog('setFolderNameByLink');
     return link.replace(/[^\w\s]/gi, '');
   }
 
