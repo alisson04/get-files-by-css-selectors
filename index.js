@@ -8,11 +8,14 @@ import md5 from 'md5';
  * Represents a GetFilesByCssSelectors
  */
 class GetFilesByCssSelectors {
+  /**
+   * @return {void}
+   */
   constructor() {
     this.logs = [];
     this.page = null;
     this.browser = null;
-    this.config = { infiniteScroll: true, showLogs: true }
+    this.config = {infiniteScroll: true, showLogs: true};
   }
 
   /**
@@ -43,13 +46,25 @@ class GetFilesByCssSelectors {
     await this.finish();
   }
 
+  /**
+   * @return {void}
+   */
   async finish() {
     await this.browser.close();
     await this.setLog('Finished');
   }
 
+  /**
+   * @param {String} cssSelector
+   * @param {String} linkAttr
+   * @return {Array} metaAttributes
+   */
   async getLinksToDownload(cssSelector, linkAttr) {
-    const metaAttributes = await this.page.$$eval(cssSelector, (el, linkAttr) => el.map((x) => x.getAttribute(linkAttr)), linkAttr);
+    const metaAttributes = await this.page.$$eval(
+        cssSelector,
+        (el, linkAttr) => el.map((x) => x.getAttribute(linkAttr)),
+        linkAttr,
+    );
     await this.setLog('Found ' + metaAttributes.length + ' links to download');
     return metaAttributes;
   }
@@ -59,7 +74,7 @@ class GetFilesByCssSelectors {
    */
   async takeScreenshot(path) {
     await this.setLog('takeScreenshot');
-    await this.page.screenshot({path: path });
+    await this.page.screenshot({path: path});
   }
 
   /**
@@ -91,33 +106,39 @@ class GetFilesByCssSelectors {
         let fileName = await this.getFileNameByLink(link);
 
         await axios({method: 'get', url: link, responseType: 'stream'})
-          .then((response) => {
-            let fileExtension = mime.extension(response.headers['content-type']);
+            .then((response) => {
+              const contentType = response.headers['content-type'];
+              const fileExtension = mime.extension(contentType);
 
-            if (fileExtension) {
-              const file = fs.createWriteStream(folderPath + '/' + fileName + '.' + fileExtension);
+              fileName = fileName + '.' + fileExtension;
 
-              return new Promise((resolve, reject) => {
-                response.data.pipe(file);
-                let error = null;
-                file.on('error', (err) => {
-                  error = err;
-                  file.close();
-                  reject(err);
+              if (fileExtension) {
+                const file = fs.createWriteStream(folderPath + '/' + fileName);
+
+                return new Promise((resolve, reject) => {
+                  response.data.pipe(file);
+                  let error = null;
+                  file.on('error', (err) => {
+                    error = err;
+                    file.close();
+                    reject(err);
+                  });
+
+                  file.on('close', () => {
+                    if (!error) {
+                      resolve(true);
+                    }
+                  });
                 });
-
-                file.on('close', () => {
-                  if (!error) {
-                    resolve(true);
-                  }
-                });
-              });
-            }
-          });
+              }
+            });
       }
     }
   }
 
+  /**
+   * @return {void}
+   */
   async infiniteScroll() {
     if (!this.config.infiniteScroll) {
       return;
@@ -129,11 +150,11 @@ class GetFilesByCssSelectors {
         let totalHeight = 0;
         const distance = 100;
         const timer = setInterval(() => {
-          var scrollHeight = document.body.scrollHeight;
+          const scrollHeight = document.body.scrollHeight;
           window.scrollBy(0, scrollHeight);
           totalHeight += distance;
 
-          if(totalHeight >= scrollHeight - window.innerHeight){
+          if (totalHeight >= scrollHeight - window.innerHeight) {
             clearInterval(timer);
             resolve();
           }
@@ -146,7 +167,7 @@ class GetFilesByCssSelectors {
    * @param {Object} config
    */
   setConfig(config) {
-    this.config = { ...this.config, ...config};
+    this.config = {...this.config, ...config};
   }
 
   /**
@@ -193,7 +214,7 @@ class GetFilesByCssSelectors {
     }
 
     await this.setLog('Creating folder: ' + folderPath);
-    fs.mkdirSync(folderPath, { recursive: true });
+    fs.mkdirSync(folderPath, {recursive: true});
   }
 }
 
